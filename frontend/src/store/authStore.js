@@ -52,7 +52,7 @@ export const useAuthStore = create(
       },
     }),
     {
-      name: 'auth-storage', // unique name for local storage
+      name: 'auth-storage', 
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ user: state.user }), // only persist the user object, not loading state
     }

@@ -11,6 +11,7 @@ from routers import pdf_insight
 from google.genai.types import GenerateContentConfig
 import google.genai as genai
 import os
+from pathlib import Path
 
 # --- Load environment variables ---
 load_dotenv()
@@ -30,10 +31,11 @@ app.add_middleware(
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 print("Gemini API Key Configured (Main.py)")
 
-#Load ML models and encoders
-rf_crop = joblib.load("model/crop_model.pkl")
-rf_fertilizer = joblib.load("model/fert_model.pkl")
-encoders = joblib.load("model/encoders.pkl")
+# Load ML models and encoders relative to this file so the service works from any cwd.
+MODEL_DIR = Path(__file__).resolve().parent / "model"
+rf_crop = joblib.load(MODEL_DIR / "crop_model.pkl")
+rf_fertilizer = joblib.load(MODEL_DIR / "fert_model.pkl")
+encoders = joblib.load(MODEL_DIR / "encoders.pkl")
 
 le_district = encoders["district"]
 le_crop = encoders["crop"]
@@ -110,7 +112,13 @@ def predict_crop(data: SoilData):
         fallback_prompt = f"""
         You are an agricultural expert.
         The ML model failed to predict results for the following soil data.
-        Please analyze the soil and respond strictly in JSON format matching this schema:
+        Please analyze the soil and respond strictly in JSON format matching this schema.
+
+        GUARDRAILS:
+        - Base your analysis strictly on the provided soil data.
+        - Do not guess or fabricate information (hallucinate).
+        - If data is insufficient, provide conservative estimates or state it.
+        - Respond ONLY with the requested JSON format, with no markdown formatting or extra text.
 
         Input:
         {{

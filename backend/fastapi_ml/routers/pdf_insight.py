@@ -154,7 +154,10 @@ async def analyze_soil_report(file: UploadFile = File(...)):
             Zinc
             Iron
 
-            Return STRICT JSON only.
+            GUARDRAILS:
+            - Only extract information explicitly present in the report.
+            - If a value is missing, return null or 0. Do not guess or hallucinate values.
+            - Return STRICT JSON only.
             """
 
             extraction_config = GenerateContentConfig(
@@ -221,7 +224,9 @@ async def analyze_soil_report(file: UploadFile = File(...)):
                 ]
             }}
 
-            Rules:
+            Rules & GUARDRAILS:
+            - Base your analysis strictly on the provided soil data.
+            - Do not hallucinate or recommend crops/fertilizers that are unsuitable for these exact parameters.
             - Return exactly 5 crops and 5 fertilizers
             - Probability must be numbers
             - Do not include extra explanation 

@@ -10,13 +10,19 @@ import authRoutes from "./routes/authRoute.js";
 // import predictionRoutes from "./routes/predictionRoute.js";
 import soilRoutes from "./routes/soilRoute.js";
 import chatRoutes from "./routes/chatRoute.js";
+import weatherRoutes from "./routes/weatherRoute.js";
 
 const app = express();
+
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000,http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-    origin: ["http://localhost:3000","http://localhost:5173"],
+  origin: allowedOrigins,
     credentials: true,
 }));
 
@@ -24,6 +30,7 @@ app.use("/api/auth", authRoutes);
 // app.use("/api/predict", predictionRoutes);
 app.use("/api/soil", soilRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/weather", weatherRoutes);
 app.get("/", (req, res) => {
   res.send("AgroIntelX API running");
 });

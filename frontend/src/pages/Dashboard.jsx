@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { ArrowLeft, Download, Leaf, Sprout, Activity, Droplets, Thermometer, Database } from "lucide-react";
 import jsPDF from "jspdf";
+import WeatherWidget from "../components/WeatherWidget";
 
 const Dashboard = () => {
   const location = useLocation(); 
@@ -203,6 +204,11 @@ const Dashboard = () => {
               </div>
             </motion.div>
           </div>
+
+          {/* ================= WEATHER FORECAST ZONE ================= */}
+          <motion.div variants={itemVariants}>
+            <WeatherWidget defaultLocation={normalizedInput.District_Name} />
+          </motion.div>
 
           {/* ================= CHART ZONE ================= */}
           <div className="grid lg:grid-cols-2 gap-8">

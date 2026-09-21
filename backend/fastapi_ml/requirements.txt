@@ -8,3 +8,5 @@ python-dotenv
 PyPDF2
 requests
 pydantic
+google-genai
+google-api-core

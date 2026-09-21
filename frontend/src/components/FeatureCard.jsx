@@ -7,7 +7,7 @@ const FeatureCard = ({ title, description, icon }) => {
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="group relative h-full"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-100 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10 blur-xl"></div>
+      <div className="absolute inset-0 bg-linear-to-br from-brand-100 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300 -z-10 blur-xl"></div>
       
       <div className="h-full bg-white border border-gray-100 p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-start relative overflow-hidden">
         

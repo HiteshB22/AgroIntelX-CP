@@ -8,31 +8,46 @@ const formatAssistantMessage = (text) => {
 
   const lines = text.split("\n").filter(Boolean);
 
+  const renderBoldText = (txt) => {
+    const parts = txt.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={index} className="font-extrabold text-brand-950">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="space-y-3">
       {lines.map((line, i) => {
-        const cleanLine = line.replace(/\*\*/g, "").trim();
+        const cleanLine = line.trim();
 
-        // Section Headings
-        if (
-          cleanLine.toLowerCase().includes("soil pH") ||
-          cleanLine.toLowerCase().includes("nutrient") ||
-          cleanLine.toLowerCase().includes("micronutrient") ||
-          cleanLine.toLowerCase().includes("recommended crops") ||
-          cleanLine.toLowerCase().includes("summary")
-        ) {
+        // Section Headings (starts with ### or ##)
+        if (cleanLine.startsWith("###")) {
           return (
             <h4
               key={i}
-              className="text-brand-800 font-bold mt-4 border-b-2 border-brand-100 pb-2 flex items-center gap-2 text-[15px] uppercase tracking-wide"
+              className="text-brand-800 font-bold mt-4 border-b border-brand-100 pb-2 flex items-center gap-2 text-[15px] uppercase tracking-wide"
             >
-              <Sparkles size={16} className="text-brand-500" /> {cleanLine}
+              <Sparkles size={16} className="text-brand-500" /> {renderBoldText(cleanLine.replace("###", "").trim())}
             </h4>
           );
         }
 
-        // Warnings (Do not apply / Avoid)
+        if (cleanLine.startsWith("##")) {
+          return (
+            <h3
+              key={i}
+              className="text-brand-900 font-extrabold mt-6 border-b-2 border-brand-200 pb-2 flex items-center gap-2 text-[17px] uppercase tracking-wide"
+            >
+              <Sparkles size={18} className="text-brand-600" /> {renderBoldText(cleanLine.replace("##", "").trim())}
+            </h3>
+          );
+        }
+
         if (
+          cleanLine.includes("⚠️") ||
           cleanLine.toLowerCase().includes("do not apply") ||
           cleanLine.toLowerCase().includes("avoid")
         ) {
@@ -42,16 +57,16 @@ const formatAssistantMessage = (text) => {
               className="bg-red-50/80 border border-red-100 text-red-800 px-4 py-3 rounded-xl text-[15px] font-medium flex items-start gap-3 shadow-sm"
             >
               <div className="mt-0.5 shrink-0">⚠️</div>
-              <p>{cleanLine}</p>
+              <p>{renderBoldText(cleanLine.replace("⚠️", "").trim())}</p>
             </div>
           );
         }
 
         // Positive Recommendations
         if (
+          cleanLine.includes("✅") ||
           cleanLine.toLowerCase().includes("recommended") ||
-          cleanLine.toLowerCase().includes("apply") ||
-          cleanLine.toLowerCase().includes("focus on")
+          cleanLine.toLowerCase().includes("apply")
         ) {
           return (
             <div
@@ -59,16 +74,19 @@ const formatAssistantMessage = (text) => {
               className="bg-brand-50 border border-brand-100 text-brand-800 px-4 py-3 rounded-xl text-[15px] font-medium flex items-start gap-3 shadow-sm"
             >
               <div className="mt-0.5 shrink-0">✅</div>
-              <p>{cleanLine}</p>
+              <p>{renderBoldText(cleanLine.replace("✅", "").trim())}</p>
             </div>
           );
         }
 
         // Bullet points
-        if (cleanLine.startsWith("*")) {
+        if (cleanLine.startsWith("*") || cleanLine.startsWith("-")) {
+          const content = cleanLine.startsWith("*") 
+            ? cleanLine.substring(1).trim() 
+            : cleanLine.substring(1).trim();
           return (
             <li key={i} className="ml-6 list-disc text-gray-700 text-[15px] marker:text-brand-500 pl-1">
-              {cleanLine.replace("*", "")}
+              {renderBoldText(content)}
             </li>
           );
         }
@@ -76,7 +94,7 @@ const formatAssistantMessage = (text) => {
         // Normal paragraph
         return (
           <p key={i} className="text-gray-700 text-[15px] leading-relaxed">
-            {cleanLine}
+            {renderBoldText(cleanLine)}
           </p>
         );
       })}
@@ -85,7 +103,14 @@ const formatAssistantMessage = (text) => {
 };
 
 /* ---------------- Main Component ---------------- */
-const ChatWindow = ({ messages, loading, onSend, activeSession }) => {
+const ChatWindow = ({ 
+  messages, 
+  loading, 
+  onSend, 
+  activeSession, 
+  selectedLanguage, 
+  setSelectedLanguage 
+}) => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -110,18 +135,41 @@ const ChatWindow = ({ messages, loading, onSend, activeSession }) => {
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
       {/* Header */}
-      <div className="px-8 py-5 border-b border-gray-100 bg-white/80 backdrop-blur-xl z-10 sticky top-0 flex items-center gap-4">
-        <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-          <Bot size={22} />
+      <div className="px-8 py-5 border-b border-gray-100 bg-white/80 backdrop-blur-xl z-10 sticky top-0 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+            <Bot size={22} />
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+              AgroIntelX Assistant
+              <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] uppercase font-bold tracking-widest">Beta</span>
+            </h2>
+            <p className="text-sm text-gray-500 font-medium">
+              AI-powered agronomic insights
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-            AgroIntelX Assistant
-            <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 text-[10px] uppercase font-bold tracking-widest">Beta</span>
-          </h2>
-          <p className="text-sm text-gray-500 font-medium">
-            AI-powered agronomic insights
-          </p>
+
+        {/* Dropdown Selector */}
+        <div className="flex items-center gap-2 z-20">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:inline">Language:</span>
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 outline-none focus:border-brand-500 cursor-pointer shadow-sm hover:bg-gray-50 transition-all"
+          >
+            <option value="auto">🌐 Auto-detect (Regional)</option>
+            <option value="English">English</option>
+            <option value="Hindi">हिन्दी (Hindi)</option>
+            <option value="Marathi">मराठी (Marathi)</option>
+            <option value="Gujarati">ગુજરાતી (Gujarati)</option>
+            <option value="Odia">ଓଡ଼ିଆ (Odia)</option>
+            <option value="Bengali">বাংলা (Bengali)</option>
+            <option value="Telugu">తెలుగు (Telugu)</option>
+            <option value="Tamil">தமிழ் (Tamil)</option>
+            <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+          </select>
         </div>
       </div>
 

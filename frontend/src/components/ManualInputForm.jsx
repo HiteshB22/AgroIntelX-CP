@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AnalysisResult from "./AnalysisResult";
-import axios from "axios";
+import api from "../services/api";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
@@ -69,8 +69,8 @@ const ManualInputForm = () => {
       setLoading(true);
       const toastId = toast.loading("Analyzing soil data...");
 
-      const res = await axios.post(
-        "http://localhost:5000/api/soil/analyze",
+      const res = await api.post(
+        "/soil/analyze",
         {
           source: "manual",
           nutrients: JSON.stringify({
@@ -82,9 +82,6 @@ const ManualInputForm = () => {
             Rainfall: parseNumber(formData.Rainfall),
           }),
         },
-        {
-          withCredentials: true,
-        }
       );
 
       toast.dismiss(toastId);

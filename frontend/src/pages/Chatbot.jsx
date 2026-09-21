@@ -8,6 +8,7 @@ const Chatbot = () => {
   const [activeSession, setActiveSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("auto");
 
   // ---------------- Fetch Sessions ----------------
   useEffect(() => {
@@ -53,6 +54,7 @@ const Chatbot = () => {
         newChat,
         reportId: reportId || activeSession?.linkedReport || null,
         sessionId: newChat ? null : activeSession?._id,
+        language: selectedLanguage, // Multi-language selected translation option
       };
 
       const res = await api.post("/chat/send", payload);
@@ -99,6 +101,8 @@ const Chatbot = () => {
           loading={loadingMessages}
           onSend={sendMessage}
           activeSession={activeSession}
+          selectedLanguage={selectedLanguage}
+          setSelectedLanguage={setSelectedLanguage}
         />
       </main>
     </div>

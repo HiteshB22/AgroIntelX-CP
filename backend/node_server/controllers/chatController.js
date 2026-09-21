@@ -9,7 +9,7 @@ import { generateChatResponse } from "../services/geminiChatService.js";
 export const sendMessage = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { sessionId, message, reportId, newChat } = req.body;
+    const { sessionId, message, reportId, newChat, language } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -66,10 +66,52 @@ export const sendMessage = async (req, res) => {
       ? await SoilReport.find({ _id: reportId, userId })
       : await SoilReport.find({ userId }).sort({ createdAt: -1 }).limit(3);
 
+    // Fetch dynamic weather forecast for chat context
+    let weatherData = null;
+    try {
+      const { get5DayForecast, getUserLatestLocation } = await import("../services/weatherService.js");
+      let location = null;
+      if (soilReports && soilReports.length > 0 && soilReports[0].extracted_input_data?.district) {
+        location = soilReports[0].extracted_input_data.district;
+      } else {
+        location = await getUserLatestLocation(userId);
+      }
+      weatherData = await get5DayForecast(location);
+    } catch (weatherErr) {
+      console.error("Failed to fetch weather context for chatbot:", weatherErr.message);
+    }
+
+    // Determine target language (multi-language support based on uploaded data location & auto-translation option)
+    let targetLanguage = "English"; 
+    if (language && language !== "auto") {
+      targetLanguage = language;
+    } else {
+      // Auto-detect based on latest/linked soil report location
+      try {
+        const { getLanguageFromLocation, getUserLatestLocation } = await import("../services/weatherService.js");
+        let district = null;
+        let state = null;
+        if (soilReports && soilReports.length > 0 && soilReports[0].extracted_input_data) {
+          district = soilReports[0].extracted_input_data.district;
+          state = soilReports[0].extracted_input_data.state;
+        } else {
+          district = await getUserLatestLocation(userId);
+        }
+        
+        const detected = getLanguageFromLocation(district, state);
+        targetLanguage = detected.name;
+        console.log(`[Auto-detect Language] Location: ${district}, ${state || ""}. Detected regional language: ${targetLanguage}`);
+      } catch (langErr) {
+        console.error("Language auto-detection failed:", langErr.message);
+      }
+    }
+
     const aiReply = await generateChatResponse({
       userMessage: message,
       soilReports,
       chatHistory,
+      weatherData,
+      targetLanguage,
     });
 
     const assistantMessage = await ChatMessage.create({
@@ -83,6 +125,7 @@ export const sendMessage = async (req, res) => {
       title: session.title,
       userMessage: message,
       assistantMessage,
+      detectedLanguage: targetLanguage,
     });
   } catch (err) {
     console.error("Chat error:", err.message);

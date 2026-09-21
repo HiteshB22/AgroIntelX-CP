@@ -4,11 +4,9 @@ import FormData from "form-data";
 import SoilReport from "../models/SoilReport.js";
 import { uploadPdfToCloudinary } from "../services/cloudinaryService.js";
 
-// Base URL for FastAPI service (ML + Gemini)
-const FASTAPI_BASE_URL = process.env.FASTAPI_URL || "http://localhost:8000";
-
 export const analyzeSoil = async (req, res) => {
   try {
+    const fastapiBaseUrl = process.env.FASTAPI_URL || "http://localhost:8000";
     // ---------------- USER & INPUT ----------------
     const userId = req.user._id;
     const { source, nutrients } = req.body;
@@ -20,7 +18,7 @@ export const analyzeSoil = async (req, res) => {
     let extractedData = null;
 
     // ============================================================
-    // 🔒 VALIDATION
+    // VALIDATION
     // ============================================================
 
     // Validate source type
@@ -55,7 +53,7 @@ export const analyzeSoil = async (req, res) => {
     }
 
     // ============================================================
-    // 🟢 CASE 1: PDF INPUT → FASTAPI (Gemini + Extraction)
+    // CASE 1: PDF INPUT → FASTAPI (Gemini + Extraction)
     // ============================================================
     if (source === "pdf" && req.file) {
 
@@ -65,7 +63,7 @@ export const analyzeSoil = async (req, res) => {
 
       // Send PDF to FastAPI for processing
       const fastapiResponse = await axios.post(
-        `${FASTAPI_BASE_URL}/api/analyze-soil-report`,
+        `${fastapiBaseUrl}/api/analyze-soil-report`,
         form,
         {
           headers: form.getHeaders(),
@@ -83,12 +81,12 @@ export const analyzeSoil = async (req, res) => {
     }
 
     // ============================================================
-    // 🟡 CASE 2: MANUAL INPUT → FASTAPI /predict (ML Model)
+    // CASE 2: MANUAL INPUT → FASTAPI /predict (ML Model)
     // ============================================================
     if (source === "manual") {
 
       const fastapiResponse = await axios.post(
-        `${FASTAPI_BASE_URL}/predict`,
+        `${fastapiBaseUrl}/predict`,
         parsedNutrients,
         {
           headers: { "Content-Type": "application/json" },
@@ -99,7 +97,7 @@ export const analyzeSoil = async (req, res) => {
       const data = fastapiResponse.data;
       console.log("Received ML analysis result:-------\n", data);
 
-      // ✅ Normalize response (important for frontend consistency)
+      // Normalize response (important for frontend consistency)
       aiResult = {
         soil_health_analysis: data.soil_health_analysis,
         soil_health_score: data.soil_health_score,
@@ -116,7 +114,7 @@ export const analyzeSoil = async (req, res) => {
     }
 
     // ============================================================
-    // 🔄 NORMALIZE EXTRACTED INPUT DATA
+    // NORMALIZE EXTRACTED INPUT DATA
     // ============================================================
     const extractedInputData = extractedData
       ? {
@@ -152,14 +150,14 @@ export const analyzeSoil = async (req, res) => {
           iron:
             extractedData.Iron || extractedData.iron || null,
 
-          // ✅ FIXED naming (lowercase for consistency)
+          // FIXED naming (lowercase for consistency)
           rainfall:
             extractedData.Rainfall || extractedData.rainfall || null,
         }
       : null;
 
     // ============================================================
-    // 💾 SAVE REPORT TO DATABASE
+    // SAVE REPORT TO DATABASE
     // ============================================================
     const soilReport = await SoilReport.create({
       userId,
@@ -177,7 +175,7 @@ export const analyzeSoil = async (req, res) => {
             soil_health_grade: aiResult.soil_health_grade,
             recommended_crop: aiResult.recommended_crop,
 
-            // ✅ FIXED KEY (singular)
+            
             recommended_fertilizer: aiResult.recommended_fertilizer,
 
             top_crops: aiResult.top_crops || [],
@@ -206,7 +204,7 @@ export const analyzeSoil = async (req, res) => {
 };
 
 // ============================================================
-// 📥 FETCH USER REPORTS
+// FETCH USER REPORTS
 // ============================================================
 export const getMySoilReports = async (req, res) => {
   try {

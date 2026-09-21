@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import FeatureCard from "../components/FeatureCard";
 import { useRef } from "react";
+import { useAuthStore } from "../store/authStore";
+import WeatherWidget from "../components/WeatherWidget";
 
 const Home = () => {
+  const { user } = useAuthStore();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -108,6 +111,7 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+
 
       {/* ================= FEATURES ================= */}
       <section className="py-32 bg-white relative">

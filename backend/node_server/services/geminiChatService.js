@@ -15,14 +15,14 @@ export const generateChatResponse = async ({
 }) => {
 
   // ======================================================
-  // 🔴 MOCK MODE (Gemini Disabled)
+  // MOCK MODE (Gemini Disabled)
   // ======================================================
   if (!USE_GEMINI) {
-    console.log("⚠️ Gemini disabled. Returning mock response.");
+    console.log("Gemini disabled. Returning mock response.");
 
     // You can make this smarter if you want
     return `
-🌱 [Mock AI Response]
+    [Mock AI Response]
 
 You asked: "${userMessage}"
 
@@ -33,23 +33,23 @@ Based on your uploaded soil report:
 - Potassium: ${soilReports[0]?.extracted_input_data?.potassium || "N/A"}
 
 Suggested Action:
-✔ Apply balanced NPK fertilizer
-✔ Choose crops suitable for your soil conditions
+Apply balanced NPK fertilizer
+Choose crops suitable for your soil conditions
 
 (This is a test response. AI is currently disabled.)
 `;
   }
 
   // ======================================================
-  // 🟢 REAL GEMINI MODE
+  // REAL GEMINI MODE
   // ======================================================
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Build soil context
   const soilContext = soilReports.length
     ? soilReports
-        .map(
-          (r, i) => `
+      .map(
+        (r, i) => `
 Report ${i + 1}:
 District: ${r.extracted_input_data?.district || "N/A"}
 pH: ${r.extracted_input_data?.ph || "N/A"}
@@ -60,8 +60,8 @@ Recommended Crop: ${r.analysis?.recommended_crop || "N/A"}
 Recommended Fertilizers: ${r.analysis?.recommended_fertilizers || "N/A"}
 Soil Health: ${r.analysis?.soil_health_grade || "N/A"}
 `
-        )
-        .join("\n")
+      )
+      .join("\n")
     : "No soil reports available.";
 
   // Build chat memory
@@ -86,6 +86,11 @@ ${userMessage}
 
 Respond with clear, actionable agricultural advice.
 Avoid generic answers. Use the user's soil data. give response with proper format.
+
+GUARDRAILS:
+- If the user asks questions unrelated to agriculture, soil health, or farming, politely decline to answer.
+- Base your recommendations purely on the provided User Soil Reports and Conversation History. Do not hallucinate facts or data.
+- If you do not have enough information to answer accurately, inform the user rather than guessing.
 `;
 
   const result = await model.generateContent(prompt);

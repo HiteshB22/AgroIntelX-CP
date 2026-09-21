@@ -2,10 +2,9 @@ import axios from "axios";
 import FormData from "form-data";//Mainly used when your backend sends files/data to another API
 
 
-const FASTAPI_BASE_URL = process.env.FASTAPI_URL || "http://localhost:8000";
-
 export const analyzeSoilWithFastAPI = async ({ pdfUrl, location }) => {
   try {
+    const fastapiBaseUrl = process.env.FASTAPI_URL || "http://localhost:8000";
     let data = {
       pdf_url: pdfUrl,
       location: {
@@ -15,7 +14,7 @@ export const analyzeSoilWithFastAPI = async ({ pdfUrl, location }) => {
     }
     console.log("Sending request to FastAPI with PDF URL:", data);
     const response = await axios.post(
-      `${FASTAPI_BASE_URL}/api/analyze-soil-report`,
+      `${fastapiBaseUrl}/api/analyze-soil-report`,
       {
         pdf_url: pdfUrl,
         location: {

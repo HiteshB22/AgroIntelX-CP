@@ -58,7 +58,6 @@ const ChatSidebar = ({ sessions, activeSession, onSelect, onNewChat }) => {
               }`}>
                 {session.title || "New Conversation"}
               </p>
-              {/* Optional: Add a stylized timestamp or preview text here if available */}
             </div>
           </button>
         ))}
