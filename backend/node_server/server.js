@@ -13,8 +13,7 @@ import chatRoutes from "./routes/chatRoute.js";
 import weatherRoutes from "./routes/weatherRoute.js";
 
 const app = express();
-
-const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000,http://localhost:5173")
+const allowedOrigins = (process.env.FRONTEND_URL || "https://frontend-rho-five-28.vercel.app,http://localhost:3000,http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -22,8 +21,14 @@ const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000,http:
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: allowedOrigins,
-    credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  credentials: true,
 }));
 
 app.use("/api/auth", authRoutes);
